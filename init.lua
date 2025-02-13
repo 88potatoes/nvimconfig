@@ -40,34 +40,103 @@ require("lazy").setup({
     "neovim/nvim-lspconfig",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
       "hrsh7th/nvim-cmp",
+      "L3MON4D3/LuaSnip",
+      "saadparwaiz1/cmp_luasnip"
     },
     config = function()
       local lspconfig = require('lspconfig')
-      
-      lspconfig.pyright.setup{}
-      lspconfig.ts_ls.setup{}
-      
+      local cmp = require('cmp')
+      local luasnip = require('luasnip')
+
+      -- Set up nvim-cmp
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<C-e>'] = cmp.mapping.abort(),
+          ['<CR>'] = cmp.mapping.confirm({ select = true }),
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+        }),
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+          { name = 'buffer' },
+          { name = 'path' }
+        })
+      })      
+
+        local capabilities = require('cmp_nvim_lsp').default_capabilities()
+		lspconfig.pyright.setup {
+        capabilities = capabilities
+      }
+      lspconfig.ts_ls.setup {
+        capabilities = capabilities
+      }
       vim.keymap.set('n', 'gd', vim.lsp.buf.definition, {})
       vim.keymap.set('n', 'K', vim.lsp.buf.hover, {})
       vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, {})
+      vim.keymap.set('n', '<D-o>', vim.lsp.buf.format, { noremap = true })
     end
-  }
+  },
+		{
+  "nvimtools/none-ls.nvim",
+  config = function()
+    local null_ls = require("null-ls")
+    null_ls.setup({
+      sources = {
+        null_ls.builtins.formatting.prettier
+      }
+    })
+  end
+}
 })
 
 vim.api.nvim_set_keymap('n', 'n', 'i', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', 'i', 'k', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', 'j', 'h', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', 'k', 'j', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', 'l', 'l', { noremap = true, silent = true })
 
 vim.api.nvim_set_keymap('v', 'n', 'i', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('v', 'i', 'k', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('v', 'j', 'h', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('v', 'k', 'j', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('v', 'l', 'l', { noremap = true, silent = true })
+
+vim.api.nvim_set_keymap('i', '<D-s>', '<C-c>:w<CR>', {noremap=true, silent=true})
+vim.api.nvim_set_keymap('n', '<D-s>', ':w<CR>', {noremap=true, silent=true})
+vim.api.nvim_set_keymap('i', '<D-o>', '<Cmd>lua vim.lsp.buf.format()<CR>', {noremap=true, silent=true})
+-- vim.api.nvim_set_keymap('n', '<D-o>', ':w<CR>', {noremap=true, silent=true})
+vim.api.nvim_set_keymap('n', '<S-l>', '<C-o>$', {noremap=true, silent=true})
+vim.api.nvim_set_keymap('n', '<S-j>', '<C-o>^', {noremap=true, silent=true})
+vim.api.nvim_set_keymap('n', '<D-.>', '<Cmd>lua vim.lsp.buf.code_action()<CR>', {noremap=true, silent=true})
 
 vim.opt.number = true
+
 vim.opt.relativenumber = true
 
 vim.opt.tabstop = 4	
