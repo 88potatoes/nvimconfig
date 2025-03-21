@@ -37,6 +37,9 @@ vim.opt.rtp:prepend(lazypath)
 
 vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
 
+-- Supermaven Completion
+vim.api.nvim_set_keymap('i', '<S-Tab>', [[<Cmd>lua require('supermaven').expand()<CR>]], { silent = true, noremap = true })
+
 -- Set up plugins
 require("lazy").setup({
     'nvim-telescope/telescope.nvim',
@@ -51,6 +54,16 @@ require("lazy").setup({
       config = function()
         require("supermaven-nvim").setup({})
       end,
+    },
+    {
+      "kylechui/nvim-surround",
+      version = "^3.0.0", -- Use for stability; omit to use `main` branch for the latest features
+      event = "VeryLazy",
+      config = function()
+        require("nvim-surround").setup({
+          -- Configuration here, or leave empty to use defaults
+        })
+      end
     },
     -- Bufferline
     {
