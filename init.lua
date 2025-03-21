@@ -38,7 +38,8 @@ vim.opt.rtp:prepend(lazypath)
 vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
 
 -- Supermaven Completion
-vim.api.nvim_set_keymap('i', '<S-Tab>', [[<Cmd>lua require('supermaven').expand()<CR>]], { silent = true, noremap = true })
+vim.api.nvim_set_keymap('i', '<S-Tab>', [[<Cmd>lua require('supermaven').expand()<CR>]],
+  { silent = true, noremap = true })
 
 -- Set up plugins
 require("lazy").setup({
@@ -54,6 +55,44 @@ require("lazy").setup({
       config = function()
         require("supermaven-nvim").setup({})
       end,
+    },
+    {
+      "karb94/neoscroll.nvim",
+      opts = {
+        -- All these keys will be mapped to their corresponding default scrolling animation
+        mappings = { '<C-u>', '<C-d>', '<C-b>', '<C-f>',
+          '<C-y>', '<C-e>', 'zt', 'zz', 'zb' },
+        hide_cursor = true,        -- Hide cursor while scrolling
+        stop_eof = true,           -- Stop at <EOF> when scrolling downwards
+        respect_scrolloff = false, -- Stop scrolling when the cursor reaches the scrolloff margin
+        pre_hook = nil,            -- Function to run before the scrolling animation starts
+        post_hook = nil,           -- Function to run after the scrolling animation ends
+        performance_mode = false,  -- Disable "Performance Mode" on all buffers.
+
+        -- Make scrolling faster by adjusting these values:
+        -- Reduce the time it takes to complete scrolling (in milliseconds)
+        cursor_scrolls_alone = false,
+        -- Lower values make scrolling faster
+        easing_function = "linear", -- 'sine' is typically faster than 'cubic'
+      },
+      config = function(_, opts)
+        neoscroll = require('neoscroll')
+        local keymap = {
+          ["<C-u>"] = function() neoscroll.ctrl_u({ duration = 50 }) end,
+          ["<C-d>"] = function() neoscroll.ctrl_d({ duration = 50 }) end,
+          ["<C-b>"] = function() neoscroll.ctrl_b({ duration = 50 }) end,
+          ["<C-f>"] = function() neoscroll.ctrl_f({ duration = 50 }) end,
+          ["<C-y>"] = function() neoscroll.scroll(-0.1, { move_cursor = false, duration = 50 }) end,
+          ["<C-e>"] = function() neoscroll.scroll(0.1, { move_cursor = false, duration = 50 }) end,
+          ["zt"]    = function() neoscroll.zt({ half_win_duration = 250 }) end,
+          ["zz"]    = function() neoscroll.zz({ half_win_duration = 250 }) end,
+          ["zb"]    = function() neoscroll.zb({ half_win_duration = 250 }) end,
+        }
+        local modes = { 'n', 'v', 'x' }
+        for key, func in pairs(keymap) do
+          vim.keymap.set(modes, key, func)
+        end
+      end
     },
     {
       "kylechui/nvim-surround",
@@ -348,6 +387,7 @@ require("lazy").setup({
     },
     {
       "nvimtools/none-ls.nvim",
+      dependencies = { "nvim-lua/plenary.nvim" },
       config = function()
         local null_ls = require("null-ls")
         null_ls.setup({
